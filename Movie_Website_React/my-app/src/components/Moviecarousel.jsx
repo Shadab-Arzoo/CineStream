@@ -1,41 +1,40 @@
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { Navigation, Scrollbar, A11y } from 'swiper/modules';
 import { Link } from 'react-router-dom';
 import "../CSS/moviecarousel.css";
-
-const baseUrl = import.meta.env.VITE_BASE_URL;
-const apiKey = import.meta.env.VITE_API_KEY;
+import { getImageUrl, getTrendingMovies } from '../api/tmdb';
 
 const Moviecarousel = () => {
   const [movies, setMovies] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchTrending = async () => {
       try {
-        const res = await axios.get(`${baseUrl}/week`, {
-          params: {
-            api_key: apiKey,
-            language: 'en-US',
-            page: 1,
-          },
-        });
-        setMovies(res.data.results);
+        setIsLoading(true);
+        const data = await getTrendingMovies(1);
+        setMovies(data.results || []);
       } catch (error) {
         console.error(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchTrending();
   }, []);
 
+  if (isLoading) {
+    return <p className="py-8 text-center text-zinc-400">Loading trending movies…</p>;
+  }
+
   return (
-    <div className="w-full h-[400px]">
+    <div className="w-full">
       <Swiper
         modules={[Navigation, Scrollbar, A11y]}
-        spaceBetween={50}
+        spaceBetween={18}
         slidesPerView="auto"
         navigation
         scrollbar={{ draggable: true }}
@@ -44,9 +43,7 @@ const Moviecarousel = () => {
       >
         {movies.map((movie) => {
           const imgPath = movie.poster_path || movie.backdrop_path;
-          const imgUrl = imgPath
-            ? `https://image.tmdb.org/t/p/w500${imgPath}`
-            : 'https://via.placeholder.com/500x750?text=No+Image';
+          const imgUrl = getImageUrl(imgPath, "w500") || 'https://via.placeholder.com/500x750?text=No+Image';
           const title = movie.title || movie.name;
 
           return (
@@ -55,8 +52,9 @@ const Moviecarousel = () => {
                 <img
                   src={imgUrl}
                   alt={title}
-                  className="rounded-xl transition-transform duration-300 hover:scale-105"
+                  className="rounded-xl transition duration-300 hover:opacity-80"
                 />
+                <p className="mt-2 text-center text-sm font-semibold text-zinc-100">{title}</p>
               </Link>
             </SwiperSlide>
           );

@@ -1,40 +1,58 @@
-import "../CSS/genre.css"
-import axios from "axios";
 import { useEffect, useState } from "react";
-
-const url = 'https://api.themoviedb.org/3/genre/movie/list?language=en';
-const apiKey = import.meta.env.VITE_API_KEY;
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { getGenres } from "../api/tmdb";
 
 const Genre = () => {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [genre, setGenre] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const selectedGenre = searchParams.get("genre") || "all";
 
   useEffect(() => {
     const fetchGenre = async () => {
       try {
-        const res = await axios.get(`${url}&api_key=${apiKey}`);
-        setGenre(res.data.genres);
+        setIsLoading(true);
+        setError("");
+        const data = await getGenres();
+        setGenre(data.genres || []);
       } catch (error) {
-        console.log(error);
+        setError("Could not load genres");
+        console.error(error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchGenre();
   }, []);
 
   return (
-    <div className="dropdown relative">
-      <div tabIndex={0} className="btn">
-        Genre
-      </div>
-      <ul
-        tabIndex={0}
-        className=" genre dropdown-content menu bg-base-100 rounded-box z-50 w-52 max-h-96 p-2 shadow-sm overflow-y-auto mt-2 absolute"
+    <div className="min-w-[150px]">
+      <select
+        aria-label="Select genre"
+        className="w-full rounded-lg border border-white/20 bg-white/5 px-3 py-[0.58rem] text-sm text-white outline-none focus:border-yellow-400"
+        disabled={isLoading || !!error}
+        value={selectedGenre}
+        onChange={(e) => {
+          const selectedGenre = e.target.value;
+          if (selectedGenre === "all") {
+            navigate("/");
+            return;
+          }
+          navigate(`/?genre=${selectedGenre}`);
+        }}
       >
+        <option value="all" className="bg-zinc-900 text-white">All Genres</option>
         {genre.map((g) => (
-          <li key={g.id}>
-            <a>{g.name}</a>
-          </li>
+          <option value={g.id} key={g.id} className="bg-zinc-900 text-white">
+            {g.name}
+          </option>
         ))}
-      </ul>
+      </select>
+      {(isLoading || error) && (
+        <span className="ml-2 text-xs text-zinc-400">{error || "Loading…"}</span>
+      )}
     </div>
   );
 };

@@ -1,63 +1,93 @@
 import { useState } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
-
-const apiKey = import.meta.env.VITE_API_KEY;
+import { getImageUrl, searchMovies, searchMulti } from "../api/tmdb";
 
 const Searchbar = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
+  const [searchType, setSearchType] = useState("multi");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
 
   const handleSearch = async (e) => {
     e.preventDefault();
-    if (!query) return;
+    if (!query.trim()) return;
 
     try {
-      const res = await axios.get(
-        `https://api.themoviedb.org/3/search/movie?api_key=${apiKey}&language=en-US&query=${query}`
+      setIsLoading(true);
+      setError("");
+      setHasSearched(true);
+      const data =
+        searchType === "movie"
+          ? await searchMovies(query.trim(), 1)
+          : await searchMulti(query.trim(), 1);
+      const normalizedResults = (data.results || []).filter(
+        (item) => item.media_type !== "person"
       );
-      setResults(res.data.results);
+      setResults(normalizedResults);
     } catch (error) {
+      setError("Could not fetch search results.");
       console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center text-white mt-6">
-      {/* 🔍 Search input form */}
-      <form onSubmit={handleSearch} className="flex gap-2 mb-4">
+    <div className="mx-auto min-h-screen max-w-6xl px-4 py-10 text-white md:px-8">
+      <h1 className="mb-6 text-3xl font-bold">Search Movies & TV</h1>
+
+      <form onSubmit={handleSearch} className="mb-8 flex flex-wrap gap-2">
+        <select
+          className="rounded-lg border border-white/20 bg-zinc-900 px-3 py-3 text-white outline-none focus:border-yellow-400"
+          value={searchType}
+          onChange={(e) => setSearchType(e.target.value)}
+        >
+          <option value="multi">All (Movies + TV)</option>
+          <option value="movie">Movies only</option>
+        </select>
         <input
           type="text"
-          placeholder="Search movies..."
+          placeholder="Search by title..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="bg-gray-800 text-white p-2 rounded-md outline-none w-64"
+          className="w-full max-w-lg rounded-lg border border-white/20 bg-zinc-900 px-4 py-3 text-white outline-none focus:border-yellow-400"
         />
-        <button type="submit" className="bg-yellow-400 text-black px-4 rounded-md">
+        <button type="submit" className="rounded-lg bg-yellow-400 px-5 py-3 font-semibold text-black">
           Search
         </button>
       </form>
 
-      {/* 🎬 Results Grid */}
-      <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 p-4">
-        {results.map((movie) => (
-          <Link 
-            to={`/movie/${movie.id}`} // ✅ fixed here
-            key={movie.id} 
-            className="bg-gray-900 p-2 rounded-lg text-center hover:scale-105 transition-transform duration-300"
+      {isLoading && <p className="py-8 text-zinc-400">Searching…</p>}
+      {error && <p className="py-8 text-red-300">{error}</p>}
+      {hasSearched && !isLoading && !error && results.length === 0 && (
+        <p className="py-8 text-zinc-400">No results found. Try another title.</p>
+      )}
+
+      <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+        {results.map((movie) => {
+          const mediaType = movie.media_type || "movie";
+          const title = movie.title || movie.name;
+          const releaseDate = movie.release_date || movie.first_air_date;
+          return (
+          <Link
+            to={`/${mediaType}/${movie.id}`}
+            key={`${mediaType}-${movie.id}`}
+            className="overflow-hidden rounded-xl border border-white/10 bg-zinc-900 transition hover:-translate-y-1 hover:border-white/30"
           >
             <img
-              src={
-                movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-                  : "https://via.placeholder.com/300x450?text=No+Image"
-              }
-              alt={movie.title}
-              className="rounded-md mb-2"
+              src={getImageUrl(movie.poster_path, "w500") || "https://via.placeholder.com/300x450?text=No+Image"}
+              alt={title}
+              className="h-[320px] w-full object-cover"
             />
-            <h3 className="text-sm">{movie.title}</h3>
+            <div className="p-3">
+              <h3 className="text-sm font-semibold text-white">{title}</h3>
+              <p className="mt-1 text-xs text-zinc-400">{releaseDate || "Unknown date"}</p>
+              <p className="mt-1 text-[11px] uppercase tracking-wide text-yellow-300">{mediaType}</p>
+            </div>
           </Link>
-        ))}
+        )})}
       </div>
     </div>
   );

@@ -1,92 +1,76 @@
 @import "tailwindcss";
 
-/* Reset margin/padding */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-/* Navbar container */
 .navbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 5vw;
-    padding: 0 2vw;
-    overflow: visible; /* allow dropdowns/icons to show */
-    background-color: #000; /* optional: black background */
-    
+    min-height: 80px;
+    padding: 0 1.5rem;
+    background: rgba(0, 0, 0, 0.88);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 60;
+    backdrop-filter: blur(10px);
 }
 
-/* Logo */
 .logo {
-    margin-left: 10%;
-    height: 8em;
-    width: 8em;
-    object-fit: contain; /* prevent distortion */
+    height: 4rem;
+    width: 4rem;
+    object-fit: contain;
 }
 
-
-/* Button container */
 .btnDiv {
     display: flex;
-    gap: 10px;
+    gap: 0.5rem;
     align-items: center;
-    margin-left: auto;
+    flex-wrap: wrap;
 }
 
-/* Buttons */
 .btn {
-    display: inline-flex;  /* important to show icons and text */
-    align-items: center;
-    justify-content: center;
-    margin: 10px;
-    padding: 6px 12px; /* optional padding */
-    cursor: pointer;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 1rem;
-    color: white;
-    transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.btn:hover {
-    transform: scale(1.05);
-}
-
-/* Divider */
-.divider {
-    height: 40px;
-    color: gray;
-}
-
-/* Genre dropdown button (optional if using DaisyUI or custom) */
-.genreBtn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin: 0;
+    padding: 0.55rem 0.8rem;
     cursor: pointer;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.95);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+    transition: all 0.2s ease;
 }
 
-/* Optional: make icons inside buttons visible and scalable */
+.btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+.btn.active {
+    background: rgba(250, 204, 21, 0.9);
+    color: #111827;
+    border-color: rgba(250, 204, 21, 0.9);
+}
+
+.divider {
+    height: 40px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
 .btn svg {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.2rem;
+    height: 1.2rem;
     vertical-align: middle;
 }
 
-/* Responsive tweaks */
 @media (max-width: 768px) {
     .logo {
-        height: 6em;
-        width: 6em;
-        margin-left: 5%;
-    }
-    .btnDiv {
-        gap: 6px;
+        height: 3.25rem;
+        width: 3.25rem;
     }
     .btn {
-        font-size: 0.875rem;
-        margin: 6px;
+        font-size: 0.82rem;
+        padding: 0.45rem 0.65rem;
     }
 }
